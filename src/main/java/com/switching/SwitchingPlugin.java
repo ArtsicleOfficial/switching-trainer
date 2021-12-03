@@ -87,8 +87,6 @@ public class SwitchingPlugin extends Plugin
 		overlay = new XPOverlay(this);
 		dropsOverlay = new DropsOverlay(this);
 
-		switchingXP = 13034426;
-
 		try {
 			levelup = AudioSystem.getClip();
 			AudioInputStream sound = AudioSystem.getAudioInputStream(this.getClass().getResourceAsStream("/levelup.wav"));
