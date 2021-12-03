@@ -21,7 +21,7 @@ public class XPOverlay extends Overlay {
         cursorSkill = ImageUtil.loadImageResource(getClass(),"/switching.png");
 
         setDragTargetable(true);
-        setPreferredPosition(OverlayPosition.BOTTOM_RIGHT);
+        setPreferredPosition(OverlayPosition.TOP_CENTER);
     }
 
     @Override
