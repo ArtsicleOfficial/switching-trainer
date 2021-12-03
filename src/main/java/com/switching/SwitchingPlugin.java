@@ -239,6 +239,7 @@ public class SwitchingPlugin extends Plugin
 	}
 
 	private void giveXP(int amt) {
+		amt *= Experience.getLevelForXp(switchingXP);
 		if(Experience.getLevelForXp(switchingXP) != Experience.getLevelForXp(switchingXP + amt)) {
 			client.addChatMessage(ChatMessageType.GAMEMESSAGE,"","Congratulations, you've just advanced your Switching level. You are now level " + Experience.getLevelForXp(switchingXP + amt) + ".",null);
 			levelup.loop(0);
