@@ -26,6 +26,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import static net.runelite.api.Experience.getLevelForXp;
 
@@ -75,8 +76,8 @@ public class SwitchingPlugin extends Plugin
 
 	public Clip levelup = null;
 
-	public RuneLiteObject celebration;
-	public int celebratingTimer = 0;
+	//https://github.com/MarbleTurtle/MoreFireworks
+	Integer[] fireWorks = {199,1388,1389};
 
 	@Override
 	protected void startUp()
@@ -86,7 +87,7 @@ public class SwitchingPlugin extends Plugin
 		overlay = new XPOverlay(this);
 		dropsOverlay = new DropsOverlay(this);
 
-
+		switchingXP = 13034426;
 
 		try {
 			levelup = AudioSystem.getClip();
@@ -95,31 +96,6 @@ public class SwitchingPlugin extends Plugin
 		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Subscribe
-	public void onGameStateChanged(GameStateChanged changed) {
-		if(changed.getGameState() == GameState.LOADING || changed.getGameState() == GameState.HOPPING || changed.getGameState() == GameState.LOGGED_IN) {
-			if(celebration != null) {
-				hideCelebration();
-				celebration = null;
-			}
-			celebration = client.createRuneLiteObject();
-			Model model = client.loadModel(10935);
-
-			celebration.setModel(model);
-
-			hideCelebration();
-		}
-	}
-
-	private void hideCelebration() {
-		clientThread.invoke(new Runnable() {
-			@Override
-			public void run() {
-				celebration.setActive(false);
-			}
-		});
 	}
 
 	@Override
@@ -133,9 +109,6 @@ public class SwitchingPlugin extends Plugin
 		if(levelup != null) {
 			levelup.close();
 		}
-
-		hideCelebration();
-		celebration = null;
 	}
 
 	@Subscribe
@@ -219,19 +192,6 @@ public class SwitchingPlugin extends Plugin
 		return ticksSinceStarted;
 	}
 
-
-	@Subscribe
-	public void onBeforeRender(BeforeRender render) {
-		if(celebratingTimer == 0) return;
-		if(celebration == null) return;
-		celebratingTimer++;
-		celebration.setLocation(new LocalPoint(((int)(Math.cos(celebratingTimer/4.0f)*1000/(celebratingTimer+2))) + client.getLocalPlayer().getLocalLocation().getX(),((int)(Math.sin(celebratingTimer/4.0f)*1000)/(celebratingTimer+2)) + client.getLocalPlayer().getLocalLocation().getY()),client.getLocalPlayer().getWorldArea().getPlane());
-		if(celebratingTimer > 80) {
-			celebratingTimer = 0;
-			hideCelebration();
-		}
-	}
-
 	@Subscribe
 	public void onItemContainerChanged (ItemContainerChanged itemContainerChanged) {
 		if(itemContainerChanged.getContainerId() == InventoryID.EQUIPMENT.getId()) {
@@ -284,9 +244,8 @@ public class SwitchingPlugin extends Plugin
 		if(Experience.getLevelForXp(switchingXP) != Experience.getLevelForXp(switchingXP + amt)) {
 			client.addChatMessage(ChatMessageType.GAMEMESSAGE,"","Congratulations, you've just advanced your Switching level. You are now level " + Experience.getLevelForXp(switchingXP + amt) + ".",null);
 			levelup.loop(0);
-			celebratingTimer = 1;
-			celebration.setActive(true);
-			celebration.setAnimation(client.loadAnimation(714));
+			client.getLocalPlayer().setGraphic(Experience.getLevelForXp(switchingXP + amt) == 99 ? fireWorks[2] : (Experience.getLevelForXp(switchingXP) % 10 == 0 ? fireWorks[1] : fireWorks[0]));
+			client.getLocalPlayer().setSpotAnimFrame(0);
 		}
 		switchingXP += amt;
 		dropsOverlay.xpDrops.add(new XPDrop(amt));
