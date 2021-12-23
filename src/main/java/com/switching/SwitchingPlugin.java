@@ -18,9 +18,11 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.http.api.item.ItemStats;
 
 import java.awt.*;
 import java.io.*;
@@ -49,6 +51,8 @@ public class SwitchingPlugin extends Plugin
 	private OverlayManager overlayManager;
 	@Inject
 	private ClientThread clientThread;
+	@Inject
+	private ItemManager itemManager;
 
 	private Item[] previousEquipment;
 
@@ -190,6 +194,17 @@ public class SwitchingPlugin extends Plugin
 		return ticksSinceStarted;
 	}
 
+	public int getSlot(Item i) {
+		ItemStats itemStats = itemManager.getItemStats(i.getId(), false);
+		if(itemStats == null) {
+			return 0;
+		}
+		if(itemStats.getEquipment() == null) {
+			return 0;
+		}
+		return itemStats.getEquipment().getSlot();
+	}
+
 	@Subscribe
 	public void onItemContainerChanged (ItemContainerChanged itemContainerChanged) {
 		if(itemContainerChanged.getContainerId() == InventoryID.EQUIPMENT.getId()) {
@@ -197,6 +212,8 @@ public class SwitchingPlugin extends Plugin
 				previousEquipment = client.getItemContainer(InventoryID.EQUIPMENT).getItems();
 			}
 			Item[] newItems = itemContainerChanged.getItemContainer().getItems();
+
+			ArrayList<Integer> slots = new ArrayList<>();
 
 			int amt = 0;
 
@@ -211,11 +228,17 @@ public class SwitchingPlugin extends Plugin
 				}
 				if(isNew) {
 					amt++;
+					slots.add(getSlot(i));
 				}
 			}
 			//Gear take-offs
-			for(Item i : previousEquipment) {
+			mainLoop: for(Item i : previousEquipment) {
 				boolean existedBefore = false;
+				for(Integer integer : slots) {
+					if(integer.equals(getSlot(i))) {
+						continue mainLoop;
+					}
+				}
 				for(Item j : newItems) {
 					if(i.getId() == j.getId()) {
 						existedBefore = true;
