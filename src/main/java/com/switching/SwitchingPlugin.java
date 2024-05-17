@@ -72,6 +72,8 @@ public class SwitchingPlugin extends Plugin
 
 	public File file = new File(RuneLite.RUNELITE_DIR, "switching-trainer/");
 	public String textFile = "count.txt";
+	public String textFileTemp = "count2.txt";
+	public String textFileOld = "count_old.txt";
 
 	public int switchingXP = 0;
 
@@ -121,9 +123,15 @@ public class SwitchingPlugin extends Plugin
 	public void saveFile() {
 		file.mkdir();
 		try {
-			DataOutputStream writer = new DataOutputStream(new FileOutputStream(new File(file,textFile)));
+			File written = new File(file, textFileTemp);
+			DataOutputStream writer = new DataOutputStream(new FileOutputStream(written));
 			writer.writeInt(switchingXP);
 			writer.close();
+			File previous = new File(file, textFile);
+			File old = new File(file, textFileOld);
+			if(old.exists()) { old.delete(); }
+			if(previous.exists()) { previous.renameTo(old); }
+			written.renameTo(new File(file, textFile));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -137,6 +145,17 @@ public class SwitchingPlugin extends Plugin
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		// If we failed to load the main file, perhaps we have a backup here.
+		try {
+			DataInputStream reader = new DataInputStream(new FileInputStream(new File(file,textFileOld)));
+			int out = reader.readInt();
+			reader.close();
+			return out;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		return 0;
 	}
 
